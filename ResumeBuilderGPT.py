@@ -62,6 +62,7 @@ else:
 # Initialize user_query to an empty string
 user_query = ""
 
+
 # Add the option to enter a URL for fetching the job description
 st.write("Enter a URL to fetch the job description automatically")
 job_url = st.text_input("Job Posting URL:", "")
