@@ -27,6 +27,7 @@ def read_pdf(file):
         st.error(f"An error occurred while reading the PDF file: {e}")
         return None
 
+
 # Function to read text from a text file
 def read_text_file(file):
     try:
