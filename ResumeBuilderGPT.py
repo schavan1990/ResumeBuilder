@@ -69,45 +69,44 @@ if default_resume:
         "passing ATS screenings and securing interviews. My default resume is: \n"
         + default_resume
     )
-    st.write("System prompt successfully created.")
 else:
     st.warning("Please upload a resume to continue.")
 
 # User Interface Elements in Streamlit
 user_query = ""
 
-# Add the option to enter a URL for fetching the job description
-st.write("Enter a URL to fetch the job description automatically")
-job_url = st.text_input("Job Posting URL:", "")
+# Add the option to enter a URL for fetching the job description only if the resume is uploaded
+if default_resume:
+    st.write("Enter a URL to fetch the job description automatically:")
+    job_url = st.text_input("Job Posting URL:", "")
+    show_jd = st.button("Show Job Description")  # Button to display the fetched job description
 
-show_jd = st.button("Show Job Description")  # Button to display the fetched job description
+    # Check if a URL is provided, and fetch the job description if it is
+    if job_url:
+        fetched_job_description = fetch_job_description(job_url)
+        if "error" in fetched_job_description.lower():
+            st.error(fetched_job_description)  # Display error if there's a problem fetching
+        else:
+            user_query = st.text_area("Job Description:", value=fetched_job_description, height=200, key='job_description_text_area')
+            submit_button = st.button("Submit")
 
-# Check if a URL is provided, and fetch the job description if it is
-if job_url:
-    fetched_job_description = fetch_job_description(job_url)
-    if "error" in fetched_job_description.lower():
-        st.error(fetched_job_description)  # Display error if there's a problem fetching
-    else:
-        user_query = st.text_area("Job Description:", value=fetched_job_description, height=200, key='job_description_text_area')
-        submit_button = st.button("Submit")
-
-if user_query: 
-    if submit_button:
-        # Generating response using Azure OpenAI's GPT-4 model
-        try:
-            response = openai.ChatCompletion.create(
-                deployment_id="gpt-4o",  # Use the correct deployment ID for your Azure instance
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_query}
-                ],
-                max_tokens=250,
-                temperature=0.7
-            )
-            assistant_response = response['choices'][0]['message']['content'].strip()
-            st.write(assistant_response)
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-else:
-    if show_jd and submit_button:  # If the user clicks the "Show Job Description" button
-        st.warning("Please enter a valid job description.")
+    if user_query: 
+        if submit_button:
+            # Generating response using Azure OpenAI's GPT-4 model
+            try:
+                response = openai.ChatCompletion.create(
+                    deployment_id="gpt-4o",  # Use the correct deployment ID for your Azure instance
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_query}
+                    ],
+                    max_tokens=250,
+                    temperature=0.7
+                )
+                assistant_response = response['choices'][0]['message']['content'].strip()
+                st.write(assistant_response)
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
+# else:
+#     if show_jd and submit_button:  # If the user clicks the "Show Job Description" button
+#         st.warning("Please enter a valid job description.")
