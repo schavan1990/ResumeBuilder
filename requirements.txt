@@ -3,4 +3,4 @@ pandas
 numpy
 beautifulsoup4
 PyMuPDF
-openai
+openai==0.28
