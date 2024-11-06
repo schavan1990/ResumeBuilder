@@ -120,7 +120,6 @@ if default_resume:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_query}
                     ],
-                    # max_tokens=250,
                     temperature=0.7
                 )
                 assistant_response = response['choices'][0]['message']['content'].strip()

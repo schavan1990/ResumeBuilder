@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+beautifulsoup4
+PyMuPDF
+openai==0.28
