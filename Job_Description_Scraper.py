@@ -28,3 +28,4 @@ def fetch_job_description(url):
 # https://www.onespan.com/about/careers/job/senior-product-manager-6320662
 # https://www.onespan.com/about/careers/job/junior-production-engineer-6239056
 # https://www.vortex-intl.com/jobs/product-manager/
+#get html content of the page and pass it to AI model to get the job description and other aspects.

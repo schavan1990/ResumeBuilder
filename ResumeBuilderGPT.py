@@ -61,13 +61,17 @@ if uploaded_file is not None:
 # Setting up the system prompt using the content of the resume if available
 if default_resume:
     system_prompt = (
-        "You are an expert in resume optimization, specializing in customizing resumes "
-        "to align with specific job descriptions while ensuring they are fully optimized "
-        "for Applicant Tracking Systems (ATS). I will provide you with a job description "
-        "and a resume, and your task is to tailor the resume details to make it ATS-friendly "
-        "and in line with the job requirements. You are committed to delivering structured, "
-        "keyword-optimized resumes that adhere to best practices, maximizing the chances of "
-        "passing ATS screenings and securing interviews. My default resume is: \n"
+         "You are an expert in resume optimization, specializing in customizing resumes to align with specific job descriptions, "
+    "while ensuring they are fully optimized for Applicant Tracking Systems (ATS). I will provide you with a job description "
+    "and a resume, and your task is to tailor the resume to make it ATS-friendly and aligned with the job requirements. "
+    "Your goal is to deliver a structured, keyword-optimized resume that maximizes the chances of passing ATS screenings "
+    "and securing interviews. You will focus on enhancing relevant skills, achievements, and keywords from the job description "
+    "while maintaining clarity and conciseness. "
+    "The resume should be restructured in the following format and please DO NOT add new sections : Professional Summary, Professional Experience, Education, "
+    "Certifications, and Awards/Projects. "
+    "Please ensure the resume is fully aligned with the job description, leveraging keywords and key phrases where applicable, "
+    "and following best practices for ATS optimization. "
+        "My default resume is: \n"
         + default_resume
     )
 else:
@@ -80,7 +84,7 @@ user_query = ""
 if default_resume:
     st.write("Enter a URL to fetch the job description automatically:")
     job_url = st.text_input("Job Posting URL:", "")
-    show_jd = st.button("Show Job Description")  # Button to display the fetched job description
+    # show_jd = st.button("Show Job Description")  # Button to display the fetched job description
 
     # Check if a URL is provided, and fetch the job description if it is
     if job_url:
@@ -88,7 +92,22 @@ if default_resume:
         if "error" in fetched_job_description.lower():
             st.error(fetched_job_description)  # Display error if there's a problem fetching
         else:
-            user_query = st.text_area("Job Description:", value=fetched_job_description, height=200, key='job_description_text_area')
+            # user_query = st.text_area("Job Description:", value=fetched_job_description, height=200, key='job_description_text_area')
+            user_query = (
+    "Analyze the given job description to identify all information useful for customizing a resume that aligns with the role. "
+    "Focus on capturing details relevant to optimizing the resume for ATS compatibility and tailoring it to the job requirements. "
+    "Specifically, extract information for these sections: "
+    "1. Job Overview "
+    "2. Candidate Profile "
+    "3. Key Responsibilities "
+    "4. Requirements "
+    "5. Core Skills "
+    "6. Responsibilities and Duties "
+    "In addition, gather insights on key achievements, company values, industry terminology, and other details that could enhance the resume’s relevance to the role. "
+    "Use this extracted information to generate a customized resume in the following format: Professional Summary, Professional Experience, Education, Certifications, and Awards/Projects. "
+    "Focus on highlighting aspects that will best demonstrate the candidate’s alignment with the job requirements, without returning the restructured job description directly. "
+    "Job Description is : \n" + fetched_job_description
+)
             submit_button = st.button("Submit")
 
     if user_query: 
@@ -101,7 +120,7 @@ if default_resume:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_query}
                     ],
-                    max_tokens=250,
+                    # max_tokens=250,
                     temperature=0.7
                 )
                 assistant_response = response['choices'][0]['message']['content'].strip()
