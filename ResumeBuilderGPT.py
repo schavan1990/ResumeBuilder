@@ -61,19 +61,31 @@ if uploaded_file is not None:
 # Setting up the system prompt using the content of the resume if available
 if default_resume:
     system_prompt = (
-         "You are an expert in resume optimization, specializing in customizing resumes to align with specific job descriptions, "
-    "while ensuring they are fully optimized for Applicant Tracking Systems (ATS). I will provide you with a job description "
-    "and a resume, and your task is to tailor the resume to make it ATS-friendly and aligned with the job requirements. "
-    "Your goal is to deliver a structured, keyword-optimized resume that maximizes the chances of passing ATS screenings "
-    "and securing interviews. You will focus on enhancing relevant skills, achievements, and keywords from the job description "
-    "while maintaining clarity and conciseness. "
-    "The resume should be restructured in the following format and please DO NOT add new sections : Professional Summary, Professional Experience, Education, "
-    "Certifications, and Awards/Projects. "
-    "Please ensure the resume is fully aligned with the job description, leveraging keywords and key phrases where applicable, "
-    "and following best practices for ATS optimization. "
-        "My default resume is: \n"
-        + default_resume
-    )
+    "You are an expert in resume optimization, specializing in tailoring resumes to align with specific job descriptions, "
+    "ensuring they are fully optimized for Applicant Tracking Systems (ATS). I will provide you with a job description and a resume, "
+    "and your task is to integrate relevant keywords from the job description into the existing resume content. Focus on the following sections: "
+    "Professional Summary, Experience, Education, and Awards and Projects. Do not add new sections. "
+    
+    "ATS Optimization: The goal is to ensure the resume is ATS-friendly and aligned with the job description. Incorporate job description keywords "
+    "(e.g., technical skills, functional skills, industry terms) directly into the existing content without creating a separate keyword section. "
+    "Ensure these keywords are embedded naturally within sentences where they fit contextually. "
+    
+    "ATS Compatibility: The resume must achieve an ATS compatibility score of 85% or higher. This score is based on how well the resume matches "
+    "the job description in terms of relevant keywords and phrases. "
+    
+    "Keyword Integration: Keywords should be strategically placed within the professional summary, experience descriptions, and other existing sections. "
+    "Avoid simply dumping keywords; instead, incorporate them into the context of your achievements, responsibilities, and skills to ensure they flow naturally. "
+    
+    "Functional and Technical Keywords: Focus on both technical and functional keywords relevant to the job description. For example, if the job involves "
+    "project management, include terms like 'project lifecycle,' 'stakeholder management,' or 'agile methodology.' Similarly, if the role requires knowledge "
+    "of specific tools or technologies, make sure they appear in the right context. "
+    
+    "Maximize Impact: Ensure that the most important keywords from the job description are used effectively to highlight your strengths and experience, "
+    "making sure that the resume appeals to both ATS systems and human reviewers. "
+    
+    "At the end of this process, provide an ATS compatibility score and ensure that the resume is structured properly with the required sections: "
+    "Professional Summary, Experience, Education, and Awards and Projects. \n"+ default_resume
+)
 else:
     st.warning("Please upload a resume to continue.")
 
