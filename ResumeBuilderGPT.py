@@ -84,7 +84,7 @@ if default_resume:
     "making sure that the resume appeals to both ATS systems and human reviewers. "
     
     "At the end of this process, provide an ATS compatibility score and ensure that the resume is structured properly with the required sections: "
-    "Professional Summary, Experience, Education, and Awards and Projects. \n"+ default_resume
+    "Professional Summary, Experience, Education, and Awards and Projects. Do not add any section after Awards and Projects.  \n"+ default_resume
 )
 else:
     st.warning("Please upload a resume to continue.")
@@ -117,7 +117,7 @@ if default_resume:
     "6. Responsibilities and Duties "
     "In addition, gather insights on key achievements, company values, industry terminology, and other details that could enhance the resume’s relevance to the role. "
     "Use this extracted information to generate a customized resume in the following format: Professional Summary, Professional Experience, Education, Certifications, and Awards/Projects. "
-    "Focus on highlighting aspects that will best demonstrate the candidate’s alignment with the job requirements, without returning the restructured job description directly. "
+    "Focus on highlighting aspects that will best demonstrate the candidate’s alignment with the job requirements, without returning the restructured job description anywhere in the response. "
     "Job Description is : \n" + fetched_job_description
 )
             submit_button = st.button("Submit")
