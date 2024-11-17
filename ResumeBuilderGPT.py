@@ -231,7 +231,7 @@ if default_resume:
                     # st.code(assistant_response)  # Display the raw response for debugging
 
                     process_assistant_response(assistant_response)
-                    st.success("Resume generated and PDF created successfully!")
+                    # st.success("Resume generated and PDF created successfully!")
                 except json.JSONDecodeError:
                     st.error("Failed to parse the assistant response. Ensure the response is in valid JSON format.")
                 except Exception as e:
