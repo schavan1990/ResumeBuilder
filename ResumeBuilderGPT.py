@@ -244,7 +244,7 @@ if default_resume:
             if assistant_response:
                 try:
                     # st.write("Assistant Response Preview:")
-                    st.code(assistant_response)  # Display the raw response for debugging
+                    # st.code(assistant_response)  # Display the raw response for debugging
 
                     process_assistant_response(assistant_response)
                     # st.success("Resume generated and PDF created successfully!")
