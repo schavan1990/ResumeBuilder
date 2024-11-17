@@ -6,7 +6,7 @@ import fitz  # PyMuPDF
 from jinja2 import Template
 import pdfkit  # Requires wkhtmltopdf installed locally
 from Job_Description_Scraper import fetch_job_description
-from Test_Latex import process_assistant_response
+from GeneratePDF import process_assistant_response
 
 # Set up Azure OpenAI API key and endpoint
 openai.api_type = "azure"
