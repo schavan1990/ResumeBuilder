@@ -1,10 +1,12 @@
+import json
 import openai
 import streamlit as st
 import os
 import fitz  # PyMuPDF
-# from jinja2 import Template
-# import pdfkit  # Requires wkhtmltopdf installed locally
+from jinja2 import Template
+import pdfkit  # Requires wkhtmltopdf installed locally
 from Job_Description_Scraper import fetch_job_description
+from Test_Latex import process_assistant_response
 
 # Set up Azure OpenAI API key and endpoint
 openai.api_type = "azure"
@@ -155,14 +157,9 @@ if default_resume:
 - Do not add or modify sections beyond Experience, Education, and Awards/Projects. Do not add new categories or summaries.
 - Use keywords naturally to improve readability and ATS compatibility without compromising the integrity of the original content.
 - Keep the structure and format consistent with the provided JSON template, ensuring clarity and uniformity.
+- Return only valid JSON as output. Do not include explanations, headers, or any text outside the JSON structure.
 
 The base resume content is as follows: """ + default_resume )
-
-
-
-
-
-
 
 else:
     st.warning("Please upload a resume to continue.")
@@ -179,7 +176,7 @@ if default_resume:
    # Check if a URL is provided, and fetch the job description if it is
     if job_url:
         fetched_job_description = fetch_job_description(job_url)
-        print("Job desc: " + fetched_job_description)  # You can remove this print in production code
+        # print("Job desc: " + fetched_job_description)  # You can remove this print in production code
 
         # Check if the job description contains an error or is empty
         if "error" in fetched_job_description.lower() or not fetched_job_description.strip():
@@ -203,9 +200,6 @@ if default_resume:
                 "Job Description is : \n" + fetched_job_description
             )
 
-
-
-
     submit_button = st.button("Submit")
 
     if user_query: 
@@ -221,7 +215,7 @@ if default_resume:
                     temperature=0.7
                 )
                 assistant_response = response['choices'][0]['message']['content'].strip()
-                st.write(assistant_response)
+                # st.write(assistant_response)
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
 # else:
@@ -229,7 +223,16 @@ if default_resume:
 #         st.warning("Please enter a valid job description.")
 
                 
-# # Process the assistant response with Test_Latex.py function
-# if assistant_response:
-#         process_assistant_response(assistant_response)
-#         st.success("Resume generated and PDF created successfully!")
+# Process the assistant response with Test_Latex.py function
+             # Process the assistant response with Test_Latex.py function
+            if assistant_response:
+                try:
+                    # st.write("Assistant Response Preview:")
+                    # st.code(assistant_response)  # Display the raw response for debugging
+
+                    process_assistant_response(assistant_response)
+                    st.success("Resume generated and PDF created successfully!")
+                except json.JSONDecodeError:
+                    st.error("Failed to parse the assistant response. Ensure the response is in valid JSON format.")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {str(e)}")
