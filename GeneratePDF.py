@@ -133,6 +133,42 @@ def generate_pdf(resume_data):
                     spaceBefore=5,
                     spaceAfter=10
                 ))
+
+        # Certifications
+        story.append(Paragraph("Certifications", styles['SectionHeader']))
+        for cert in resume_data['certifications']:
+            cert_text = (
+                f"<b>{cert['name']}</b> - {cert['organization']}"
+            )
+            story.append(Paragraph(cert_text, styles['ExperienceHeader']))
+        
+        # Awards and Projects
+        story.append(Paragraph("Awards & Projects", styles['SectionHeader']))
+        for project in resume_data['awardsAndProjects']:
+            project_text = (
+                f"<b>{project['project']}</b> - {project['organization']}"
+                f"<br/><i>{project['date']} | {project['location']}</i>"
+            )
+            story.append(Paragraph(project_text, styles['ExperienceHeader']))
+            
+            if project.get('achievements'):
+                achievements = []
+                for achievement in project['achievements']:
+                    achievements.append(
+                        ListItem(Paragraph(achievement, styles['Normal']))
+                    )
+                story.append(ListFlowable(
+                    achievements,
+                    bulletType='bullet',
+                    leftIndent=20,
+                    spaceBefore=5,
+                    spaceAfter=10
+                ))
+
+        # Current Project
+        if 'currentProject' in resume_data:
+            story.append(Paragraph("Current Project", styles['SectionHeader']))
+            story.append(Paragraph(resume_data['currentProject']['description'], styles['Normal']))
         
         doc.build(story)
         return buffer.getvalue()
