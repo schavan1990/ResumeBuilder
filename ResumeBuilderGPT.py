@@ -71,43 +71,33 @@ if default_resume:
 
     You will customize the resume to improve its relevance to the job description by **exactly** integrating keywords and other contextually relevant details that highlight the candidate’s alignment with the role. **No implied matching** is allowed—only use the exact keywords from the job description. 
 
+    **Key Adjustments to Ensure Customization**:
+    - **Modify Every Achievement**: Ensure every achievement in the **Experience** section is updated to reflect keywords and context from the job description. No bullet point should remain unmodified unless it already includes relevant job description keywords.
+    - **Non-Matching Achievements**: Identify achievements that do not align closely with the job description and rewrite them to include at least one relevant keyword or phrase.
+
     **Steps to Follow:**
 
     1. **Extract Keywords**: Identify the key terms and phrases from the job description that are essential to the role, including both technical and soft skills, job-specific terminology, and qualifications. **List the exact words and phrases as they appear in the job description.**
 
-    2. **Enhance Resume Content**:
-       - **Review and enrich the achievements** within the **Experience** section to reflect the context and requirements of the job description.
-       - **Only enhance the achievements** section to align with the job description.
-       - **Do not add or modify** the **Job Title**, **Company Name**, or **Dates**.
-       - **Avoid adding a Professional Summary or any additional sections.**
-       - Ensure that **achievements align** with the **job role** and are relevant to the **company**’s focus and industry. Add and modify content to reflect the correct role, ensuring the skills and responsibilities align with each company’s needs.
+    2. **Modify Resume Achievements**:
+       - **Force a change in every achievement.** 
+       - Restructure existing content to integrate job description keywords naturally.
+       - Replace less relevant details with job-specific terminology to ensure alignment.
+       - Do not add entirely new achievements; only modify and enhance existing ones.
 
-    3. **Exact Keyword Integration**: Insert keywords from the job description (from Step 1 above) into the achievements **as-is**, ensuring the precise match with the job description. For example, if the job requires "project management," be specific: "Managed multiple projects with cross-functional teams, overseeing project lifecycles and deliverables." **Do not imply or paraphrase**—use the exact phrasing from the job description.
+    3. **Exact Keyword Integration**: Insert keywords from the job description into the achievements **as-is**, ensuring a precise match with the job description. For example:
+        - If the job description requires "stakeholder management," rewrite a point to reflect this, e.g., *"Led stakeholder management initiatives, facilitating communication and project alignment."*
 
-    4. **Role and Company Fit**: Ensure that the **role title** and **company** make sense with the additions or modifications. Do not introduce skills or achievements that do not fit the context of the role and company.
+    4. **Keyword Match Tracking**:
+        - Count the number of keywords integrated into the updated resume.
+        - Identify and report which specific achievements have been modified to include these keywords.
 
-    5. **Preserve Core Information**: Ensure company names, job titles, and dates remain intact. Only enhance the content by adding relevant **exact** keywords or modifying sentences to better align with the job description.
+    5. **Avoid Identical Outputs**:
+        - Compare input and output resumes.
+        - Ensure that no achievement remains unchanged unless it already perfectly aligns with the job description.
 
-    6. **Contextual Keyword Use**: Ensure keywords are used strategically and **in their exact context**. For example, when the job description emphasizes "stakeholder management," integrate this term exactly as stated in the job description.
-
-    7. **Maximize ATS Compatibility**: Ensure that **at least 85% of the primary keywords** from the job description (Step 1) are naturally distributed across the **Experience** section’s achievements, with a focus on functional and technical skills.
-
-    8. **Avoid Keyword Overload**: Ensure a balanced distribution of keywords across the achievements. Prioritize readability and context.
-
-    9. **Job Title and Skill Alignment**:
-        - Use **industry-standard job titles**. For example, replace a creative title like "Content Guru" with the standard title "Senior Content Marketing Manager."
-        - List skills exactly as they appear in the job description (e.g., "Microsoft Excel (Advanced: Pivot Tables, VLOOKUP, Macros)").
-
-    10. **Match Achievements to Job Requirements**: Use quantifiable results (e.g., "Increased revenue by 40% through implementing an automated CRM system") and align them with the specific job description requirements (e.g., "Salesforce experience" or "project management").
-
-    11. **Acronym Usage**: First mention should include both the term and acronym (e.g., "Search Engine Optimization (SEO)"), followed by the acronym in subsequent mentions.
-
-    12. **Consistent Formatting**: Follow a consistent format across all sections, e.g., "Company Name | Job Title | Location | Dates," followed by bullet points highlighting achievements using job description keywords.
-
-    13. **Job Description Mirroring**: When the job description mentions a specific requirement (e.g., "must have experience with Salesforce"), ensure the resume clearly states **exactly** "5+ years of Salesforce experience" or another specific number of years. Update the achievements to reflect the requirement.
-
-    14. **Output Requirements**:
-        - Return only the customized resume in JSON format. The JSON structure MUST follow this format:
+    6. **Output Requirements**:
+        - Return the updated resume in JSON format, following this structure:
 
         ```json
         {
@@ -167,15 +157,11 @@ if default_resume:
         ```
 
     **Reminders**:
-    - Focus exclusively on customizing the **Experience** section’s achievements to enhance relevance to job description important keywords and ATS optimization.
-    - Do not modify **Company Name**, **Job Title**, or **Dates**.
-    - Ensure that the final resume aligns with the job description, using **exact** keywords and contextually relevant content that highlights the candidate’s fit for the role.
+    - Focus exclusively on customizing the **Experience** section’s achievements.
+    - Ensure that no achievement remains unchanged unless it perfectly matches the job description.
+    - Highlight modified achievements and track keyword matches to ensure transparency in changes.
     - Maintain clarity, consistency, and structure in the JSON format, and ensure valid JSON output only.
-    """ + default_resume )
-
-
-
-
+    """+ default_resume )
 
 else:
     st.warning("Please upload a resume to continue.")
@@ -244,7 +230,7 @@ if default_resume:
             if assistant_response:
                 try:
                     # st.write("Assistant Response Preview:")
-                    # st.code(assistant_response)  # Display the raw response for debugging
+                    st.code(assistant_response)  # Display the raw response for debugging
 
                     process_assistant_response(assistant_response)
                     # st.success("Resume generated and PDF created successfully!")
