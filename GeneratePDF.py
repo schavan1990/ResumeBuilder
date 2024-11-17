@@ -1,221 +1,236 @@
 import json
-import subprocess
 import os
 import logging
-from jinja2 import Environment, FileSystemLoader
 import streamlit as st
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, ListFlowable, ListItem
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from io import BytesIO
-import time
 import base64
-import streamlit.components.v1 as components  # Correct import
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Define a function to escape LaTeX special characters
-def escape_latex(value):
-    """Escape LaTeX special characters in the given string."""
-    if not value:
-        return value
-    latex_special_chars = {
-        '%': r'\%',     
-        '$': r'\$',     
-        '&': r'\&',     
-        '#': r'\#',     
-        '_': r'\_',     
-        '{': r'\{',     
-        '}': r'\}',     
-        '~': r'\textasciitilde',
-        '^': r'\textasciicircum',
-        '\\': r'\textbackslash',
-        '\n': r'\\',  # Handling newline characters
-    }
-    for char, replacement in latex_special_chars.items():
-        value = value.replace(char, replacement)
-    return value
+def create_custom_styles():
+    """Create custom styles for the PDF document"""
+    styles = getSampleStyleSheet()
+    
+    # Header style
+    styles.add(ParagraphStyle(
+        name='CustomHeader',
+        parent=styles['Heading1'],
+        fontSize=16,
+        spaceAfter=20,
+        alignment=1  # Center alignment
+    ))
+    
+    # Contact info style
+    styles.add(ParagraphStyle(
+        name='ContactInfo',
+        parent=styles['Normal'],
+        fontSize=10,
+        alignment=1,
+        spaceAfter=15
+    ))
+    
+    # Section header style
+    styles.add(ParagraphStyle(
+        name='SectionHeader',
+        parent=styles['Heading2'],
+        fontSize=12,
+        spaceBefore=15,
+        spaceAfter=10
+    ))
+    
+    # Experience header style
+    styles.add(ParagraphStyle(
+        name='ExperienceHeader',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceBefore=10,
+        spaceAfter=5,
+        fontName='Helvetica-Bold'
+    ))
+    
+    return styles
 
-# Preprocess JSON to escape LaTeX characters
-def preprocess_json(data):
-    """Recursively escape LaTeX special characters in a dictionary or list."""
-    if isinstance(data, dict):
-        return {key: preprocess_json(value) for key, value in data.items()}
-    elif isinstance(data, list):
-        return [preprocess_json(item) for item in data]
-    elif isinstance(data, str):
-        return escape_latex(data)
-    return data
-
-# Function to render LaTeX from template
-def render_latex_template(sections):
-    """Render LaTeX content from the template using the provided sections."""
-    latex_template = r"""
-    \documentclass[a4paper,10pt]{article}
-    \usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
-    \usepackage{enumitem}
-    \usepackage{hyperref}
-    \usepackage{xcolor}
-    \usepackage{times}
-
-    \definecolor{darkblue}{RGB}{0, 0, 139}
-
-    \pagestyle{empty}
-    \begin{document}
-
-    \begin{center}
-        {\Large\textbf{ {{ contactInformation.name }} }}\\[0.5em]
-        {{ contactInformation.location }}\\[0.3em]
-        \href{mailto:{{ contactInformation.email }}}{ {{ contactInformation.email }} }{% if contactInformation.phone %} | {{ contactInformation.phone }}{% endif %}\\[0.3em]
-        \href{ {{ contactInformation.linkedin }} }{ {{ contactInformation.linkedin }} }
-    \end{center}
-
-    \hrule
-    \vspace{1em}
-
-    \section*{Professional Experience}
-    {% for experience in professionalExperience %}
-        {\textbf{ {{ experience.company }} }} \hfill {\textit{ {{ experience.date }} }}\\
-        {\textbf{ {{ experience.role }} }} \hfill {{ experience.location }}\\
-        \begin{itemize}[leftmargin=*,nosep]
-        {% for achievement in experience.achievements %}
-            \item {{ achievement }}
-        {% endfor %}
-        \end{itemize}
-    {% endfor %}
-
-    \section*{Education}
-    {% for edu in education %}
-        {\textbf{ {{ edu.institution }} }} \hfill {\textit{ {{ edu.date }} }}\\
-        {{ edu.degree }}{% if edu.location %}, {{ edu.location }}{% endif %}
-        {% if edu.achievements %}
-        \begin{itemize}[leftmargin=*,nosep]
-        {% for achievement in edu.achievements %}
-            \item {{ achievement }}
-        {% endfor %}
-        \end{itemize}
-        {% endif %}
-    {% endfor %}
-
-    \section*{Certifications}
-    \begin{itemize}[leftmargin=*,nosep]
-    {% for cert in certifications %}
-        \item {{ cert.name }}{% if cert.organization %} by {{ cert.organization }}{% endif %}
-    {% endfor %}
-    \end{itemize}
-
-    \section*{Awards and Projects}
-    {% for project in awardsAndProjects %}
-        {\textbf{ {{ project.project }} }} \hfill {\textit{ {{ project.date }} }}\\
-        {% if project.organization %}{{ project.organization }}{% endif %}{% if project.location %}, {{ project.location }}{% endif %}
-        \begin{itemize}[leftmargin=*,nosep]
-        {% for achievement in project.achievements %}
-            \item {{ achievement }}
-        {% endfor %}
-        \end{itemize}
-    {% endfor %}
-
-    \section*{Current Project}
-    {{ currentProject.description }}
-
-    \end{document}
-    """
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.from_string(latex_template)
-    return template.render(**sections)
-
-# Function to compile LaTeX and generate PDF
-def compile_latex_to_pdf(tex_filename, output_dir):
-    """Compile LaTeX file to PDF using xelatex and save it to a specified directory."""
+def generate_pdf(resume_data):
+    """Generate PDF using ReportLab"""
     try:
-        logger.debug(f"Compiling LaTeX file {tex_filename} to PDF using xelatex.")
-        
-        # Ensure the output directory exists
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        # Construct the full PDF output path
-        pdf_output_path = os.path.join(output_dir, os.path.basename(tex_filename).replace('.tex', '.pdf'))
-
-        # Run xelatex to generate the PDF
-        result = subprocess.run(
-            ['xelatex', '-output-directory', output_dir, '-interaction=nonstopmode', tex_filename],
-            check=True, capture_output=True
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
         )
         
-        logger.debug(f"xelatex stdout: {result.stdout.decode()}")
-        logger.debug(f"xelatex stderr: {result.stderr.decode()}")  # Capture stderr for error details
+        styles = create_custom_styles()
+        story = []
         
-        logger.debug("PDF generation completed.")
-        return pdf_output_path
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error generating PDF: {e.stderr.decode()}")
-        return None
-
-# Function to convert PDF to Base64 and prepare download
-def prepare_pdf_for_download(pdf_file):
-    """Convert the generated PDF to Base64 and prepare it for download via file picker."""
-    with open(pdf_file, "rb") as f:
-        pdf_data = f.read()
-
-    pdf_base64 = base64.b64encode(pdf_data).decode()
-    logger.debug("INSIDE FINALLLYYYYYY")
-    js = f"""
-    <button type="button" id="picker">Download PDF</button>
-
-    <script>
-    async function run() {{
-        const handle = await showSaveFilePicker({{
-            suggestedName: 'resume.pdf',
-            types: [{{
-                description: 'PDF Resume',
-                accept: {{'application/pdf': ['.pdf']}},
-            }}],
-        }});
-
-        const pdfBlob = new Blob([new Uint8Array(atob("{pdf_base64}").split("").map(c => c.charCodeAt(0)))], {{
-            type: 'application/pdf'
-        }});
-
-        const writableStream = await handle.createWritable();
-        await writableStream.write(pdfBlob);
-        await writableStream.close();
-    }}
-
-    document.getElementById("picker").onclick = run;
-    </script>
-    """
-    components.html(js, height=100)
-
-# Main function to process the assistant response and generate the PDF
-def process_assistant_response(assistant_response):
-    try:
-        logger.debug("Processing assistant response.")
-        # Parse JSON response
-        if assistant_response.startswith("```json") and assistant_response.endswith("```"):
-            assistant_response = assistant_response[7:-3].strip()
-        sections = json.loads(assistant_response)
-
-        # Preprocess data
-        sections = preprocess_json(sections)
-
-        # Generate LaTeX content
-        rendered_latex = render_latex_template(sections)
+        # Contact Information
+        contact = resume_data['contactInformation']
+        story.append(Paragraph(contact['name'], styles['CustomHeader']))
+        contact_text = f"{contact['location']}<br/>{contact['email']}"
+        if contact.get('phone'):
+            contact_text += f" | {contact['phone']}"
+        if contact.get('linkedin'):
+            contact_text += f"<br/>{contact['linkedin']}"
+        story.append(Paragraph(contact_text, styles['ContactInfo']))
         
-        # Write LaTeX content to .tex file
-        tex_filename = "generated_resume.tex"
-        logger.debug(f"Writing LaTeX content to {tex_filename}.")
-        with open(tex_filename, 'w', encoding='utf-8') as f:
-            f.write(rendered_latex)
-
-        # Set your specific folder path here
-        output_dir = r"C:\Users\sumit\OneDrive\Desktop\Ankit POC\Outputs"  # Use raw string literal
-
-        # Compile LaTeX to PDF and save it in the specified folder
-        pdf_file = compile_latex_to_pdf(tex_filename, output_dir)
-        prepare_pdf_for_download(pdf_file)
+        # Professional Experience
+        story.append(Paragraph("Professional Experience", styles['SectionHeader']))
+        for exp in resume_data['professionalExperience']:
+            header_text = (
+                f"<b>{exp['company']}</b> - {exp['role']}"
+                f"<br/><i>{exp['location']} | {exp['date']}</i>"
+            )
+            story.append(Paragraph(header_text, styles['ExperienceHeader']))
+            
+            # Achievements
+            achievements = []
+            for achievement in exp['achievements']:
+                achievements.append(
+                    ListItem(Paragraph(achievement, styles['Normal']))
+                )
+            story.append(ListFlowable(
+                achievements,
+                bulletType='bullet',
+                leftIndent=20,
+                spaceBefore=5,
+                spaceAfter=10
+            ))
         
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse JSON: {e}")
+        # Education
+        story.append(Paragraph("Education", styles['SectionHeader']))
+        for edu in resume_data['education']:
+            header_text = (
+                f"<b>{edu['institution']}</b> - {edu['degree']}"
+                f"<br/><i>{edu.get('location', '')} | {edu['date']}</i>"
+            )
+            story.append(Paragraph(header_text, styles['ExperienceHeader']))
+            
+            if edu.get('achievements'):
+                achievements = []
+                for achievement in edu['achievements']:
+                    achievements.append(
+                        ListItem(Paragraph(achievement, styles['Normal']))
+                    )
+                story.append(ListFlowable(
+                    achievements,
+                    bulletType='bullet',
+                    leftIndent=20,
+                    spaceBefore=5,
+                    spaceAfter=10
+                ))
+        
+        doc.build(story)
+        return buffer.getvalue()
+        
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Error generating PDF: {str(e)}")
+        raise
+
+def create_download_button(pdf_data):
+    """Create a download button for the PDF"""
+    try:
+        b64_pdf = base64.b64encode(pdf_data).decode()
+        
+        custom_css = """
+            <style>
+                .download-button {
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    transition: background-color 0.3s;
+                }
+                .download-button:hover {
+                    background-color: #45a049;
+                }
+            </style>
+        """
+        
+        download_button = f"""
+            {custom_css}
+            <button class="download-button" onclick="downloadPDF()">
+                📄 Download Resume PDF
+            </button>
+            
+            <script>
+                function downloadPDF() {{
+                    try {{
+                        const b64Data = "{b64_pdf}";
+                        const blob = new Blob(
+                            [Uint8Array.from(atob(b64Data), c => c.charCodeAt(0))],
+                            {{type: 'application/pdf'}}
+                        );
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'resume.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(link);
+                    }} catch(error) {{
+                        console.error("Download failed:", error);
+                        alert("Download failed. Please try again.");
+                    }}
+                }}
+            </script>
+        """
+        
+        st.components.v1.html(download_button, height=70)
+        
+    except Exception as e:
+        logger.error(f"Error creating download button: {str(e)}")
+        st.error("Error creating download button. Please try again.")
+
+def process_assistant_response(assistant_response):
+    """Process the assistant response and generate PDF"""
+    try:
+        # Parse JSON from assistant response
+        if isinstance(assistant_response, str):
+            if assistant_response.startswith("```json") and assistant_response.endswith("```"):
+                assistant_response = assistant_response[7:-3].strip()
+        
+        resume_data = json.loads(assistant_response)
+        
+        # Validate required sections
+        required_sections = ['contactInformation', 'professionalExperience', 'education']
+        missing_sections = [section for section in required_sections if section not in resume_data]
+        if missing_sections:
+            raise ValueError(f"Missing required sections: {', '.join(missing_sections)}")
+        
+        # Generate PDF
+        pdf_data = generate_pdf(resume_data)
+        
+        if pdf_data:
+            st.success("✅ PDF generated successfully!")
+            create_download_button(pdf_data)
+        else:
+            st.error("❌ Failed to generate PDF. Please check the logs for details.")
+            
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error: {str(e)}")
+        st.error("❌ Error parsing resume data. Please ensure valid JSON format.")
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        st.error(f"❌ {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        st.error(f"❌ An unexpected error occurred: {str(e)}")
