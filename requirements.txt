@@ -1,5 +1,5 @@
 streamlit>=1.20.0
-openai>=0.28
+openai==0.28
 PyMuPDF>=1.21.1
 Jinja2>=3.1.2
 pdfkit>=1.0.0
