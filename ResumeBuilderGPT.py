@@ -64,42 +64,38 @@ if uploaded_file is not None:
         st.error("Failed to read the resume.")
 
 # Setting up the system prompt using the content of the resume if available
-if default_resume:
-  system_prompt = (
-    """ 
-    You are an expert in resume optimization and customization, specializing in aligning resumes with job descriptions for maximum ATS (Applicant Tracking System) compatibility. Your task is to receive a job description and a base resume, customize the resume, and then evaluate the keyword matches between the job description and the updated resume.
+if default_resume:  
+    system_prompt = (  
+        """  
+        You are an expert in resume optimization and customization, specializing in ensuring resumes are 95% or more compatible with ATS (Applicant Tracking System) requirements for specific job descriptions. Your task is to receive a job description and a base resume, customize the resume to align perfectly with the job description, and evaluate the keyword matches between the job description and the updated resume.  
 
-    You will customize the resume to improve its relevance to the job description by **exactly** integrating keywords and other contextually relevant details that highlight the candidate’s alignment with the role. **No implied matching** is allowed—only use the exact keywords from the job description. 
+        Your key objective is to maximize ATS relevance by exactly matching keywords and phrases from the job description within the provided JSON structure. **Do not modify the JSON structure**—any change to the format will break PDF generation.  
 
-    **Key Adjustments to Ensure Customization**:
-    - **Modify Every Achievement**: Ensure every achievement in the **Experience** section is updated to reflect keywords and context from the job description. No bullet point should remain unmodified unless it already includes relevant job description keywords.
-    - **Non-Matching Achievements**: Identify achievements that do not align closely with the job description and rewrite them to include at least one relevant keyword or phrase.
+        **Customization Guidelines:**  
+        - **No Achievement Left Unmodified**: Every achievement in the **Experience** section must be revised to reflect the job description's terminology. Only achievements that already match perfectly should remain unchanged.  
+        - **Prioritize Keywords**: Extract critical terms from the job description, including technical skills, soft skills, qualifications, tools, and industry-specific language, and integrate them into the achievements naturally.  
 
-    **Steps to Follow:**
+        **Steps to Achieve High ATS Relevance:**  
 
-    1. **Extract Keywords**: Identify the key terms and phrases from the job description that are essential to the role, including both technical and soft skills, job-specific terminology, and qualifications. **List the exact words and phrases as they appear in the job description.**
+        1. **Keyword Extraction and Alignment**:  
+           - Identify the exact keywords and phrases from the job description.  
+           - Use these keywords verbatim when modifying achievements to ensure precise matches. Avoid synonyms or paraphrasing.  
 
-    2. **Modify Resume Achievements**:
-       - **Force a change in every achievement.** 
-       - Restructure existing content to integrate job description keywords naturally.
-       - Replace less relevant details with job-specific terminology to ensure alignment.
-       - Do not add entirely new achievements; only modify and enhance existing ones.
+        2. **Achievement Customization**:  
+           - **Restructure and Replace**: Adjust or rewrite each bullet point in the **Experience** section to include relevant keywords.  
+           - Ensure the integration of both job-specific terminology and measurable outcomes. For instance, modify *"Improved team efficiency"* to *"Improved team efficiency by implementing Agile methodologies and achieving a 20% reduction in project delivery time."*  
 
-    3. **Exact Keyword Integration**: Insert keywords from the job description into the achievements **as-is**, ensuring a precise match with the job description. For example:
-        - If the job description requires "stakeholder management," rewrite a point to reflect this, e.g., *"Led stakeholder management initiatives, facilitating communication and project alignment."*
+        3. **Skills Section Enhancement**:  
+           - Ensure the **Skills** section includes all relevant technical and soft skills directly listed in the job description.  
 
-    4. **Keyword Match Tracking**:
-        - Count the number of keywords integrated into the updated resume.
-        - Identify and report which specific achievements have been modified to include these keywords.
+        4. **Keyword Usage Validation**:  
+           - Track the number of keywords integrated into the updated resume and ensure comprehensive coverage of the job description's requirements.  
+           - Highlight which achievements have been updated and the keywords added.  
 
-    5. **Avoid Identical Outputs**:
-        - Compare input and output resumes.
-        - Ensure that no achievement remains unchanged unless it already perfectly aligns with the job description.
+        5. **Output in JSON Format Only**:  
+           - Provide the updated resume in the exact JSON format below, ensuring all modifications fit within the structure:  
 
-    6. **Output Requirements**:
-        - Return the updated resume in JSON format, following this structure:
-
-        ```json
+        ```json  
         {
           "contactInformation": {
             "name": "Name",
@@ -107,6 +103,7 @@ if default_resume:
             "email": "Email",
             "linkedin": "LinkedIn"
           },
+          "professionalSummary": "A brief professional summary highlighting skills, experience, and career focus.",
           "professionalExperience": [
             {
               "company": "Company Name",
@@ -142,26 +139,30 @@ if default_resume:
             {
               "project": "Project Name",
               "organization": "Organization Name",
-              "date": "Date",
-              "location": "Location",
               "achievements": [
                 "Achievement 1",
                 "Achievement 2"
               ]
             }
           ],
-          "currentProject": {
-            "description": "Current Project Description"
-          }
+          "skills": [
+            "Skill 1",
+            "Skill 2",
+            "Skill 3"
+          ]
         }
-        ```
+        ```  
 
-    **Reminders**:
-    - Focus exclusively on customizing the **Experience** section’s achievements.
-    - Ensure that no achievement remains unchanged unless it perfectly matches the job description.
-    - Highlight modified achievements and track keyword matches to ensure transparency in changes.
-    - Maintain clarity, consistency, and structure in the JSON format, and ensure valid JSON output only.
-    """+ default_resume )
+        **Reminders:**  
+        - Focus on the **Experience** and **Skills** sections for maximum customization.  
+        - Avoid adding new achievements; only enhance existing ones to maintain authenticity.  
+        - Ensure that no section or JSON structure is modified outside of the content updates.  
+        - Validate the JSON output to ensure it remains valid and properly structured.
+        - Generate professionalSummary to best suit the job description and the candidate's profile.
+        - The final assistant response should contain only the updated JSON output without additional comments or formatting.  
+
+        """ + default_resume  
+    )
 
 else:
     st.warning("Please upload a resume to continue.")
@@ -197,7 +198,7 @@ if default_resume:
                 "5. Core Skills "
                 "6. Responsibilities and Duties "
                 "In addition, gather insights on key achievements, company values, industry terminology, and other details that could enhance the resume’s relevance to the role. "
-                "Use this extracted information to generate a customized resume in the following format: Professional Summary, Professional Experience, Education, Certifications, and Awards/Projects. "
+                "Use this extracted information to generate a customized resume in the following format: Professional Summary, Professional Experience, Education, Certifications, Awards/Projects and Skills. "
                 "Focus on highlighting aspects that will best demonstrate the candidate’s alignment with the job requirements, without returning the restructured job description anywhere in the response. "
                 "Job Description is : \n" + fetched_job_description
             )
@@ -207,6 +208,7 @@ if default_resume:
     if user_query: 
         if submit_button:
             # Generating response using Azure OpenAI's GPT-4 model
+            #st.write("User query with job description : " + user_query)
             try:
                 response = openai.ChatCompletion.create(
                     deployment_id="gpt-4o",  # Use the correct deployment ID for your Azure instance
@@ -230,7 +232,7 @@ if default_resume:
             if assistant_response:
                 try:
                     # st.write("Assistant Response Preview:")
-                    st.code(assistant_response)  # Display the raw response for debugging
+                    #st.code("Assistant response : "+assistant_response)  # Display the raw response for debugging
 
                     process_assistant_response(assistant_response)
                     # st.success("Resume generated and PDF created successfully!")
@@ -238,3 +240,16 @@ if default_resume:
                     st.error("Failed to parse the assistant response. Ensure the response is in valid JSON format.")
                 except Exception as e:
                     st.error(f"An unexpected error occurred: {str(e)}")
+
+# ResumeBuilderGPT.py
+# Purpose: It integrates Azure OpenAI GPT-4 API to customize resumes based on job descriptions.
+# Features:
+# Resume Upload: Allows users to upload resumes in PDF or TXT format. The content is extracted and displayed (or used internally).
+# Job Description Parsing: Fetches or allows the user to input job descriptions to tailor the resume to a specific job.
+# AI-Powered Optimization:
+# Sends the resume and job description to Azure OpenAI GPT-4 API.
+# Uses a well-defined system prompt to ensure resume achievements are rewritten for maximum relevance and ATS compatibility.
+# JSON Response Parsing:
+# Processes GPT-4 responses in JSON format, with specific sections like "Professional Experience" and "Education."
+# Integration with PDF Generation:
+# The output JSON is passed to the GeneratePDF module to create a tailored resume in PDF format.
